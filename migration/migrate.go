@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/Nilay1999/gin-gonic-server/initializers"
-	"github.com/Nilay1999/gin-gonic-server/router"
+	"github.com/Nilay1999/gin-gonic-server/models"
 )
 
 func init() {
@@ -11,6 +11,5 @@ func init() {
 }
 
 func main() {
-	r := router.InitRouter()
-	r.Run()
+	initializers.DB.AutoMigrate(&models.User{})
 }
