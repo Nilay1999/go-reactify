@@ -20,7 +20,19 @@ func InitRouter() *gin.Engine {
 		userGroup := v1.Group("user")
 		{
 			user := new(controllers.UserController)
+			userGroup.GET("/", user.GetPaginatedUser)
+		}
+		{
+			user := new(controllers.UserController)
+			userGroup.GET("/:id", user.GetUserById)
+		}
+		{
+			user := new(controllers.UserController)
 			userGroup.POST("/", user.CreateUser)
+		}
+		{
+			user := new(controllers.UserController)
+			userGroup.DELETE("/:id", user.DeleteUser)
 		}
 	}
 	return router
