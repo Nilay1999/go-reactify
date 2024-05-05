@@ -25,13 +25,14 @@ func (u UserController) CreateUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotAcceptable, gin.H{"message": customizer.DecryptErrors(err)})
 		return
 	}
+
 	user, err := userModel.Create(payloadType)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"user": user})
+	ctx.JSON(http.StatusOK, gin.H{"data": user})
 }
 
 func (u UserController) GetUserById(ctx *gin.Context) {
@@ -60,11 +61,11 @@ func (u UserController) GetPaginatedUser(ctx *gin.Context) {
 
 func (u UserController) DeleteUser(ctx *gin.Context) {
 	id := ctx.Param("id")
-	user, err := userModel.Delete(id)
+	message, err := userModel.Delete(id)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"data": user})
+	ctx.JSON(http.StatusOK, gin.H{"message": message})
 }

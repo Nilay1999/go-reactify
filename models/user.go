@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/Nilay1999/gin-gonic-server/helpers"
 	"github.com/Nilay1999/gin-gonic-server/initializers"
 	"github.com/Nilay1999/gin-gonic-server/types"
 	"gorm.io/gorm"
@@ -9,19 +8,18 @@ import (
 
 type User struct {
 	gorm.Model
-	Username string         `gorm:"size:255;not null;unique" json:"username"`
-	Password string         `gorm:"size:255;not null;" json:"-"`
-	Email    string         `gorm:"size:255;not null;" json:"email"`
-	Gender   helpers.Gender `gorm:"type:enum('male','female');not null"`
+	Username string `gorm:"size:255;not null;unique" json:"username"`
+	Password string `gorm:"size:255;not null;" json:"-"`
+	Email    string `gorm:"size:255;not null;" json:"email"`
+	Gender   string `gorm:"size:255;not null;" json:"gender"`
 }
 
 func (u User) Create(payload types.UserType) (*User, error) {
-	gender, _ := helpers.ParseGender(payload.Gender)
 	user := User{
 		Username: payload.Username,
 		Password: payload.Password,
 		Email:    payload.Email,
-		Gender:   gender,
+		Gender:   payload.Gender,
 	}
 
 	result := initializers.DB.Create(&user)
