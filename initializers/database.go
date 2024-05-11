@@ -8,15 +8,15 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
+var Repository *gorm.DB
 
 func Init() {
-	dbURL := os.Getenv("DATABASE_URL")
+	DatabaseURL := os.Getenv("DATABASE_URL")
 
-	db, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
+	repository, err := gorm.Open(postgres.Open(DatabaseURL), &gorm.Config{})
 
 	if err != nil {
 		log.Fatalln(err)
 	}
-	DB = db
+	Repository = repository
 }

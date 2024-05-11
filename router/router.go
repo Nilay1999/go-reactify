@@ -9,6 +9,9 @@ import (
 
 func InitRouter() *gin.Engine {
 	router := gin.New()
+	router.ForwardedByClientIP = true
+	router.SetTrustedProxies([]string{"127.0.0.1"})
+
 	router.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"message": "Server running ...",
@@ -20,19 +23,25 @@ func InitRouter() *gin.Engine {
 		userGroup := v1.Group("user")
 		{
 			user := new(controllers.UserController)
-			userGroup.GET("/", user.GetPaginatedUser)
+			userGroup.GET("", user.GetPaginatedUser)
 		}
 		{
 			user := new(controllers.UserController)
-			userGroup.GET("/:id", user.GetUserById)
+			userGroup.GET(":id", user.GetUserById)
 		}
 		{
 			user := new(controllers.UserController)
-			userGroup.POST("/", user.CreateUser)
+			userGroup.POST("", user.CreateUser)
 		}
 		{
 			user := new(controllers.UserController)
-			userGroup.DELETE("/:id", user.DeleteUser)
+			userGroup.DELETE(":id", user.DeleteUser)
+		}
+
+		authGroup := v1.Group("auth")
+		{
+			auth := new(controllers.AuthController)
+			authGroup.POST("", auth.Login)
 		}
 	}
 	return router

@@ -1,8 +1,10 @@
 package models
 
 import (
+	"github.com/Nilay1999/gin-gonic-server/helpers"
 	"github.com/Nilay1999/gin-gonic-server/initializers"
 	"github.com/Nilay1999/gin-gonic-server/types"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -15,14 +17,19 @@ type User struct {
 }
 
 func (u User) Create(payload types.UserType) (*User, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
 	user := User{
 		Username: payload.Username,
-		Password: payload.Password,
+		Password: string(hashedPassword),
 		Email:    payload.Email,
 		Gender:   payload.Gender,
 	}
 
-	result := initializers.DB.Create(&user)
+	result := initializers.Repository.Create(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -32,7 +39,7 @@ func (u User) Create(payload types.UserType) (*User, error) {
 func (u User) GetById(id string) (*User, error) {
 	var user User
 
-	result := initializers.DB.First(&user, id)
+	result := initializers.Repository.First(&user, id)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -41,7 +48,7 @@ func (u User) GetById(id string) (*User, error) {
 
 func (u User) Get(offset int, limit int) ([]User, error) {
 	var users []User
-	result := initializers.DB.Limit(limit).Offset(offset).Find(&users)
+	result := initializers.Repository.Limit(limit).Offset(offset).Find(&users)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -53,9 +60,45 @@ func (u User) Delete(id string) (string, error) {
 	var message string = "User deleted !"
 	var errorMessage string = "User deletion failed !"
 
-	result := initializers.DB.Delete(&user, id)
+	result := initializers.Repository.Delete(&user, id)
 	if result.Error != nil {
 		return errorMessage, result.Error
 	}
 	return message, nil
+}
+
+func (u User) Authenticate(payload types.AuthType) (string, error) {
+	var user User
+
+	var message string = "Authentication successful !"
+	var errorMessage string = "User not found with given credentials !"
+
+	isIdentifierEmail := helpers.ValidateEmail(payload.Identifier)
+	if isIdentifierEmail {
+		result := initializers.Repository.Where("email = ?", payload.Identifier).First(&user)
+		if result.Error != nil {
+			return errorMessage, result.Error
+		}
+		error := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password))
+		if error == nil {
+			return message, nil
+		} else {
+			errorMessage = "Incorrect password!"
+			return errorMessage, nil
+		}
+
+	} else {
+		result := initializers.Repository.Where("username = ?", payload.Identifier).First(&user)
+		if result.Error != nil {
+			return errorMessage, result.Error
+		}
+
+		error := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password))
+		if error == nil {
+			return message, nil
+		} else {
+			errorMessage = "Incorrect password!"
+			return errorMessage, nil
+		}
+	}
 }
