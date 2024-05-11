@@ -2,12 +2,15 @@ module github.com/Nilay1999/gin-gonic-server
 
 go 1.20
 
-require github.com/gin-gonic/gin v1.9.1
+require (
+	github.com/gin-gonic/gin v1.9.1
+	github.com/golodash/galidator v1.4.3
+)
 
 require (
 	github.com/dlclark/regexp2 v1.7.0 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/golang/protobuf v1.5.0 // indirect
-	github.com/golodash/galidator v1.4.3 // indirect
 	github.com/golodash/godash v1.2.0 // indirect
 	github.com/jinzhu/copier v0.3.5 // indirect
 	github.com/nyaruka/phonenumbers v1.1.6 // indirect
@@ -22,6 +25,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.4.3 // indirect
@@ -45,6 +49,6 @@ require (
 	golang.org/x/text v0.15.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/postgres v1.5.7 // indirect
-	gorm.io/gorm v1.25.10 // indirect
+	gorm.io/driver/postgres v1.5.7
+	gorm.io/gorm v1.25.10
 )

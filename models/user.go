@@ -1,9 +1,14 @@
 package models
 
 import (
+	"fmt"
+	"os"
+	"time"
+
 	"github.com/Nilay1999/gin-gonic-server/helpers"
 	"github.com/Nilay1999/gin-gonic-server/initializers"
 	"github.com/Nilay1999/gin-gonic-server/types"
+	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -14,6 +19,11 @@ type User struct {
 	Password string `gorm:"size:255;not null;" json:"-"`
 	Email    string `gorm:"size:255;not null;" json:"email"`
 	Gender   string `gorm:"size:255;not null;" json:"gender"`
+}
+
+type TokenResponse struct {
+	message string
+	token string
 }
 
 func (u User) Create(payload types.UserType) (*User, error) {
@@ -67,7 +77,7 @@ func (u User) Delete(id string) (string, error) {
 	return message, nil
 }
 
-func (u User) Authenticate(payload types.AuthType) (string, error) {
+func (u User) Authenticate(payload types.AuthType) (TokenResponse, error) {
 	var user User
 
 	var message string = "Authentication successful !"
@@ -75,30 +85,42 @@ func (u User) Authenticate(payload types.AuthType) (string, error) {
 
 	isIdentifierEmail := helpers.ValidateEmail(payload.Identifier)
 	if isIdentifierEmail {
+		fmt.Println("1st")
 		result := initializers.Repository.Where("email = ?", payload.Identifier).First(&user)
 		if result.Error != nil {
-			return errorMessage, result.Error
+			return TokenResponse{ message: errorMessage, token: ""}, result.Error
 		}
+		fmt.Println("1st")
 		error := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password))
 		if error == nil {
-			return message, nil
+			token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+				"sub": user.ID,
+				"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
+			})
+			tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
+			return TokenResponse{ message: message, token: tokenString }, err
 		} else {
 			errorMessage = "Incorrect password!"
-			return errorMessage, nil
+			return TokenResponse{message: errorMessage, token: ""}, nil
 		}
 
 	} else {
 		result := initializers.Repository.Where("username = ?", payload.Identifier).First(&user)
 		if result.Error != nil {
-			return errorMessage, result.Error
+			return TokenResponse{message: errorMessage, token: ""}, result.Error
 		}
 
 		error := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password))
 		if error == nil {
-			return message, nil
+			token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+				"sub": user.ID,
+				"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
+			})
+			tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
+			return TokenResponse{ message: message, token: tokenString }, err
 		} else {
 			errorMessage = "Incorrect password!"
-			return errorMessage, nil
+			return TokenResponse{message: errorMessage, token: ""}, nil
 		}
 	}
 }
