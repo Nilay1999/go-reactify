@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Nilay1999/gin-gonic-server/controllers"
+	"github.com/Nilay1999/gin-gonic-server/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,7 +21,7 @@ func InitRouter() *gin.Engine {
 
 	v1 := router.Group("v1")
 	{
-		userGroup := v1.Group("user")
+		userGroup := v1.Group("user").Use(middleware.AuthenticateRequest)
 		{
 			user := new(controllers.UserController)
 			userGroup.GET("", user.GetPaginatedUser)

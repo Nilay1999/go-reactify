@@ -16,10 +16,10 @@ func (a AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	message, serviceError := userModel.Authenticate(payload)
+	response, serviceError := userModel.Authenticate(payload)
 	if serviceError != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": serviceError.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"data": message})
+	ctx.JSON(http.StatusOK, gin.H{"data": map[string]string{"message": response.Message, "token": response.Token}})
 }

@@ -13,10 +13,11 @@ import (
 )
 
 func AuthenticateRequest(ctx *gin.Context) {
-	authToken := ctx.GetHeader("Authorization")
+	authToken := ctx.Request.Header.Get("Authorization")
 
 	if authToken == "" {
-		ctx.AbortWithStatus(http.StatusUnauthorized)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+		return
 	}
 
 	token, _ := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
@@ -29,20 +30,23 @@ func AuthenticateRequest(ctx *gin.Context) {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
-			ctx.AbortWithStatus(http.StatusUnauthorized)
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+			return
 		}
 
 		var user models.User
 		initializers.Repository.First(&user, claims["sub"])
 
 		if user.ID == 0 {
-			ctx.AbortWithStatus(http.StatusUnauthorized)
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+			return
 		}
 
 		ctx.Set("user", user)
 		ctx.Next()
 	} else {
-		ctx.AbortWithStatus(http.StatusUnauthorized)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+		return
 	}
 
 }

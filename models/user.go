@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -22,8 +21,8 @@ type User struct {
 }
 
 type TokenResponse struct {
-	message string
-	token string
+	Message string
+	Token   string
 }
 
 func (u User) Create(payload types.UserType) (*User, error) {
@@ -85,29 +84,28 @@ func (u User) Authenticate(payload types.AuthType) (TokenResponse, error) {
 
 	isIdentifierEmail := helpers.ValidateEmail(payload.Identifier)
 	if isIdentifierEmail {
-		fmt.Println("1st")
 		result := initializers.Repository.Where("email = ?", payload.Identifier).First(&user)
 		if result.Error != nil {
-			return TokenResponse{ message: errorMessage, token: ""}, result.Error
+			return TokenResponse{Message: errorMessage, Token: ""}, result.Error
 		}
-		fmt.Println("1st")
 		error := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password))
+
 		if error == nil {
 			token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 				"sub": user.ID,
 				"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
 			})
 			tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
-			return TokenResponse{ message: message, token: tokenString }, err
+			return TokenResponse{Message: message, Token: tokenString}, err
 		} else {
 			errorMessage = "Incorrect password!"
-			return TokenResponse{message: errorMessage, token: ""}, nil
+			return TokenResponse{Message: errorMessage, Token: ""}, nil
 		}
 
 	} else {
 		result := initializers.Repository.Where("username = ?", payload.Identifier).First(&user)
 		if result.Error != nil {
-			return TokenResponse{message: errorMessage, token: ""}, result.Error
+			return TokenResponse{Message: errorMessage, Token: ""}, result.Error
 		}
 
 		error := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password))
@@ -117,10 +115,10 @@ func (u User) Authenticate(payload types.AuthType) (TokenResponse, error) {
 				"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
 			})
 			tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
-			return TokenResponse{ message: message, token: tokenString }, err
+			return TokenResponse{Message: message, Token: tokenString}, err
 		} else {
 			errorMessage = "Incorrect password!"
-			return TokenResponse{message: errorMessage, token: ""}, nil
+			return TokenResponse{Message: errorMessage, Token: ""}, nil
 		}
 	}
 }
