@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Nilay1999/gin-gonic-server/models"
+	"github.com/Nilay1999/gin-gonic-server/services"
 	"github.com/Nilay1999/gin-gonic-server/types"
 	"github.com/gin-gonic/gin"
 	"github.com/golodash/galidator"
@@ -17,7 +17,7 @@ var (
 
 type UserController struct{}
 
-var userModel = new(models.User)
+var userService = new(services.User)
 
 func (u UserController) CreateUser(ctx *gin.Context) {
 	var payloadType types.UserType
@@ -26,7 +26,7 @@ func (u UserController) CreateUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := userModel.Create(payloadType)
+	user, err := userService.Create(payloadType)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -37,7 +37,7 @@ func (u UserController) CreateUser(ctx *gin.Context) {
 
 func (u UserController) GetUserById(ctx *gin.Context) {
 	id := ctx.Param("id")
-	user, err := userModel.GetById(id)
+	user, err := userService.GetById(id)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -51,7 +51,7 @@ func (u UserController) GetPaginatedUser(ctx *gin.Context) {
 	limit, _ := strconv.Atoi(ctx.Query("limit"))
 	offset := (page - 1) * limit
 
-	users, err := userModel.Get(offset, limit)
+	users, err := userService.Get(offset, limit)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -61,7 +61,7 @@ func (u UserController) GetPaginatedUser(ctx *gin.Context) {
 
 func (u UserController) DeleteUser(ctx *gin.Context) {
 	id := ctx.Param("id")
-	message, err := userModel.Delete(id)
+	message, err := userService.Delete(id)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

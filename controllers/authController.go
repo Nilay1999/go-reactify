@@ -16,7 +16,7 @@ func (a AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	response, serviceError := userModel.Authenticate(payload)
+	response, serviceError := userService.Authenticate(payload)
 	if serviceError != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": serviceError.Error()})
 		return
