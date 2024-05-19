@@ -32,17 +32,17 @@ func InitRouter() *gin.Engine {
 		}
 		{
 			user := new(controllers.UserController)
-			userGroup.POST("", user.CreateUser)
-		}
-		{
-			user := new(controllers.UserController)
 			userGroup.DELETE(":id", user.DeleteUser)
 		}
 
 		authGroup := v1.Group("auth")
 		{
 			auth := new(controllers.AuthController)
-			authGroup.POST("", auth.Login)
+			authGroup.POST("signin", auth.Signin)
+		}
+		{
+			auth := new(controllers.AuthController)
+			authGroup.POST("signup", auth.Signup)
 		}
 	}
 	return router

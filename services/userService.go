@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"os"
 	"time"
 
@@ -33,7 +34,17 @@ func (u User) Create(payload types.UserType) (*User, error) {
 			Password: string(hashedPassword),
 			Email:    payload.Email,
 			Gender:   payload.Gender,
+			Age:      payload.Age,
 		},
+	}
+
+	usernameExists := initializers.Repository.Where("username = ?", payload.Username).First(&user)
+	emailExists := initializers.Repository.Where("email = ?", payload.Email).First(&user)
+
+	if usernameExists.Error == nil {
+		return nil, errors.New("User with given username already exists")
+	} else if emailExists.Error == nil {
+		return nil, errors.New("User with given email already exists")
 	}
 
 	result := initializers.Repository.Create(&user)

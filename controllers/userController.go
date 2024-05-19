@@ -19,22 +19,6 @@ type UserController struct{}
 
 var userService = new(services.User)
 
-func (u UserController) CreateUser(ctx *gin.Context) {
-	var payloadType types.UserType
-	if err := ctx.BindJSON(&payloadType); err != nil {
-		ctx.JSON(http.StatusNotAcceptable, gin.H{"message": customizer.DecryptErrors(err)})
-		return
-	}
-
-	user, err := userService.Create(payloadType)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"data": user})
-}
-
 func (u UserController) GetUserById(ctx *gin.Context) {
 	id := ctx.Param("id")
 	user, err := userService.GetById(id)

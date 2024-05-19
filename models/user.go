@@ -10,4 +10,5 @@ type User struct {
 	Password string `gorm:"size:255;not null;" json:"-"`
 	Email    string `gorm:"size:255;not null;" json:"email"`
 	Gender   string `gorm:"size:255;not null;" json:"gender"`
+	Age      uint   `gorm:"size:255;not null;" json:"age"`
 }
