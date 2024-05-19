@@ -11,4 +11,5 @@ type User struct {
 	Email    string `gorm:"size:255;not null;" json:"email"`
 	Gender   string `gorm:"size:255;not null;" json:"gender"`
 	Age      uint   `gorm:"size:255;not null;" json:"age"`
+	Posts    []Post `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
