@@ -5,14 +5,7 @@ import (
 	"strconv"
 
 	"github.com/Nilay1999/gin-gonic-server/services"
-	"github.com/Nilay1999/gin-gonic-server/types"
 	"github.com/gin-gonic/gin"
-	"github.com/golodash/galidator"
-)
-
-var (
-	g          = galidator.New()
-	customizer = g.Validator(types.UserType{})
 )
 
 type UserController struct{}

@@ -11,5 +11,5 @@ func init() {
 }
 
 func main() {
-	initializers.Repository.AutoMigrate(&models.User{}, &models.Post{}, &models.Comment{})
+	initializers.Repository.AutoMigrate(&models.User{}, &models.Post{}, &models.Comment{}, &models.Vote{})
 }
