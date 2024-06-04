@@ -1,10 +1,8 @@
 package main
 
 import (
-	"os"
-
 	"github.com/Nilay1999/gin-gonic-server/initializers"
-	"github.com/Nilay1999/gin-gonic-server/router"
+	"github.com/Nilay1999/gin-gonic-server/models"
 )
 
 func init() {
@@ -13,6 +11,5 @@ func init() {
 }
 
 func main() {
-	r := router.InitRouter()
-	r.Run(":" + os.Getenv("PORT"))
+	initializers.Repository.AutoMigrate(&models.User{}, &models.Post{}, &models.Comment{}, &models.Vote{})
 }
