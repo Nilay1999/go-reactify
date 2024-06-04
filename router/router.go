@@ -13,7 +13,7 @@ func InitRouter() *gin.Engine {
 	router.ForwardedByClientIP = true
 	router.SetTrustedProxies([]string{"127.0.0.1"})
 
-	router.GET("/", func(ctx *gin.Context) {
+	router.GET("", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"message": "Server running ...",
 		})
@@ -33,6 +33,20 @@ func InitRouter() *gin.Engine {
 		{
 			user := new(controllers.UserController)
 			userGroup.DELETE(":id", user.DeleteUser)
+		}
+
+		postGroup := v1.Group("post").Use(middleware.AuthenticateRequest)
+		{
+			post := new(controllers.PostController)
+			postGroup.POST("", post.CreatePost)
+		}
+		{
+			post := new(controllers.PostController)
+			postGroup.POST("/upvote/:id", post.Upvote)
+		}
+		{
+			post := new(controllers.PostController)
+			postGroup.POST("/downvote/:id", post.Downvote)
 		}
 
 		authGroup := v1.Group("auth")

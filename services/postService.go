@@ -9,31 +9,22 @@ import (
 type Post struct {
 	models.Post
 }
-type Vote struct {
-	models.Vote
-}
 
-func (p Post) Create(payload types.CreatePost) (*Post, error) {
+func (p Post) Create(data types.CreatePost) (*Post, error) {
 	post := Post{
 		Post: models.Post{
-			Title:  payload.Title,
-			Body:   payload.Body,
-			UserID: payload.UserId,
+			Title:  data.Title,
+			Body:   data.Body,
+			UserID: data.UserId,
 		},
 	}
 	result := initializers.Repository.Create(&post)
 	if result.Error != nil {
 		return nil, result.Error
 	}
+	if err := initializers.Repository.Preload("User").First(&post, post.ID).Error; err != nil {
+		return nil, err
+	}
 
 	return &post, nil
-}
-
-func (v Vote) Upvote(postId uint, payload types.Upvote) (*Post, error) {
-	var vote Vote
-	result := initializers.Repository.Where("post_id = ? AND user_id = ?", vote.PostID, vote.UserID).First(&vote)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
 }

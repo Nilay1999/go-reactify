@@ -6,6 +6,6 @@ type CreatePost struct {
 	UserId uint   `json:"userId" binding:"required" required:"userId is required"`
 }
 
-type Upvote struct {
+type VotePost struct {
 	UserId uint `json:"userId" binding:"required" required:"userId is required"`
 }
