@@ -28,3 +28,21 @@ func (p Post) Create(data types.CreatePost) (*Post, error) {
 
 	return &post, nil
 }
+
+func (p Post) Get(offset int, limit int) ([]Post, error) {
+	var posts []Post
+	result := initializers.Repository.Preload("User").Limit(limit).Offset(offset).Find(&posts)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return posts, nil
+}
+
+func (p Post) GetById(id string) (*Post, error) {
+	var post Post
+	result := initializers.Repository.Preload("User").First(&post, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &post, nil
+}
