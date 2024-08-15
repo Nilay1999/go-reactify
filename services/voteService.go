@@ -13,93 +13,149 @@ type Vote struct {
 	models.Vote
 }
 
-func (v Vote) Upvote(postId uint, data types.VotePost) (*int64, *int64, error) {
-	vote := Vote{
-		Vote: models.Vote{
-			UserID:   data.UserId,
-			PostID:   postId,
-			VoteType: "upvote",
-		},
+func (v Vote) Upvote(postID uint, data types.VotePost) (*int64, *int64, error) {
+	newVote := models.Vote{
+		UserID:   data.UserId,
+		PostID:   postID,
+		VoteType: "upvote",
 	}
-	var upvoteCount int64
-	var downvoteCount int64
+	var upvoteCount, downvoteCount int64
+	var existingDownvote models.Vote
 
-	upvoteExists := initializers.Repository.
-		Where("post_id = ? AND user_id = ? AND vote_type = ?", vote.PostID, vote.UserID, vote.VoteType).
-		First(&vote)
+	// Start a new transaction
+	tx := initializers.Repository.Begin()
+	if tx.Error != nil {
+		return nil, nil, tx.Error
+	}
 
+	// Check if the upvote already exists
+	upvoteExists := tx.
+		Where("post_id = ? AND user_id = ? AND vote_type = ?", newVote.PostID, newVote.UserID, newVote.VoteType).
+		First(&models.Vote{})
+
+	// Check if a downvote exists
+	downvoteExists := tx.
+		Where("post_id = ? AND user_id = ? AND vote_type = ?", newVote.PostID, newVote.UserID, "downvote").
+		First(&existingDownvote)
+
+	// Remove existing downvote if it exists
+	if downvoteExists.Error == nil {
+		if err := tx.Unscoped().Delete(&existingDownvote).Error; err != nil {
+			tx.Rollback()
+			return nil, nil, err
+		}
+	}
+
+	// Return error if the upvote already exists
 	if upvoteExists.Error == nil {
+		tx.Rollback()
 		return nil, nil, errors.New("User already upvoted")
 	} else if !errors.Is(upvoteExists.Error, gorm.ErrRecordNotFound) {
+		tx.Rollback()
 		return nil, nil, upvoteExists.Error
 	}
 
-	upvote := initializers.Repository.Create(&vote)
-	if upvote.Error != nil {
-		return nil, nil, upvote.Error
+	// Create new upvote
+	if err := tx.Create(&newVote).Error; err != nil {
+		tx.Rollback()
+		return nil, nil, err
 	}
 
-	upvoteCountQuery := initializers.Repository.
-		Model(&v.Vote).
-		Where("post_id = ? AND vote_type = ?", vote.PostID, "upvote").
-		Count(&upvoteCount)
-
-	downvoteCountQuery := initializers.Repository.
-		Model(&v.Vote).
-		Where("post_id = ? AND vote_type = ?", vote.PostID, "downvote").
-		Count(&downvoteCount)
-
-	if upvoteCountQuery.Error != nil {
-		return nil, nil, upvoteCountQuery.Error
+	// Count upvotes
+	if err := tx.
+		Model(&models.Vote{}).
+		Where("post_id = ? AND vote_type = ?", newVote.PostID, "upvote").
+		Count(&upvoteCount).Error; err != nil {
+		tx.Rollback()
+		return nil, nil, err
 	}
-	if downvoteCountQuery.Error != nil {
-		return nil, nil, downvoteCountQuery.Error
+
+	// Count downvotes
+	if err := tx.
+		Model(&models.Vote{}).
+		Where("post_id = ? AND vote_type = ?", newVote.PostID, "downvote").
+		Count(&downvoteCount).Error; err != nil {
+		tx.Rollback()
+		return nil, nil, err
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return nil, nil, err
 	}
 
 	return &upvoteCount, &downvoteCount, nil
 }
 
-func (v Vote) Downvote(postId uint, data types.VotePost) (*int64, *int64, error) {
-	vote := Vote{
-		Vote: models.Vote{
-			UserID:   data.UserId,
-			PostID:   postId,
-			VoteType: "downvote",
-		},
+func (v Vote) Downvote(postID uint, data types.VotePost) (*int64, *int64, error) {
+	newVote := models.Vote{
+		UserID:   data.UserId,
+		PostID:   postID,
+		VoteType: "downvote",
 	}
-	var upvoteCount int64
-	var downvoteCount int64
+	var upvoteCount, downvoteCount int64
+	var existingUpvote models.Vote
 
-	upvoteExists := initializers.Repository.
-		Where("post_id = ? AND user_id = ? AND vote_type = ?", vote.PostID, vote.UserID, vote.VoteType).
-		First(&vote)
+	// Start a new transaction
+	tx := initializers.Repository.Begin()
+	if tx.Error != nil {
+		return nil, nil, tx.Error
+	}
 
+	// Check if the downvote already exists
+	downvoteExists := tx.
+		Where("post_id = ? AND user_id = ? AND vote_type = ?", newVote.PostID, newVote.UserID, newVote.VoteType).
+		First(&models.Vote{})
+
+	// Check if an upvote exists
+	upvoteExists := tx.
+		Where("post_id = ? AND user_id = ? AND vote_type = ?", newVote.PostID, newVote.UserID, "upvote").
+		First(&existingUpvote)
+
+	// Remove existing upvote if it exists
 	if upvoteExists.Error == nil {
+		if err := tx.Unscoped().Delete(&existingUpvote).Error; err != nil {
+			tx.Rollback()
+			return nil, nil, err
+		}
+	}
+
+	// Return error if the downvote already exists
+	if downvoteExists.Error == nil {
+		tx.Rollback()
 		return nil, nil, errors.New("User already downvoted")
-	} else if !errors.Is(upvoteExists.Error, gorm.ErrRecordNotFound) {
-		return nil, nil, upvoteExists.Error
+	} else if !errors.Is(downvoteExists.Error, gorm.ErrRecordNotFound) {
+		tx.Rollback()
+		return nil, nil, downvoteExists.Error
 	}
 
-	upvote := initializers.Repository.Create(&vote)
-	if upvote.Error != nil {
-		return nil, nil, upvote.Error
+	// Create new downvote
+	if err := tx.Create(&newVote).Error; err != nil {
+		tx.Rollback()
+		return nil, nil, err
 	}
 
-	upvoteCountQuery := initializers.Repository.
-		Model(&v.Vote).
-		Where("post_id = ? AND vote_type = ?", vote.PostID, "upvote").
-		Count(&upvoteCount)
-
-	downvoteCountQuery := initializers.Repository.
-		Model(&v.Vote).
-		Where("post_id = ? AND vote_type = ?", vote.PostID, "downvote").
-		Count(&downvoteCount)
-
-	if upvoteCountQuery.Error != nil {
-		return nil, nil, upvoteCountQuery.Error
+	// Count upvotes
+	if err := tx.
+		Model(&models.Vote{}).
+		Where("post_id = ? AND vote_type = ?", newVote.PostID, "upvote").
+		Count(&upvoteCount).Error; err != nil {
+		tx.Rollback()
+		return nil, nil, err
 	}
-	if downvoteCountQuery.Error != nil {
-		return nil, nil, downvoteCountQuery.Error
+
+	// Count downvotes
+	if err := tx.
+		Model(&models.Vote{}).
+		Where("post_id = ? AND vote_type = ?", newVote.PostID, "downvote").
+		Count(&downvoteCount).Error; err != nil {
+		tx.Rollback()
+		return nil, nil, err
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return nil, nil, err
 	}
 
 	return &upvoteCount, &downvoteCount, nil

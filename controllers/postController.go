@@ -14,6 +14,30 @@ type PostController struct{}
 var postService = new(services.Post)
 var voteService = new(services.Vote)
 
+func (p PostController) GetAllPost(ctx *gin.Context) {
+	page, _ := strconv.Atoi(ctx.Query("page"))
+	limit, _ := strconv.Atoi(ctx.Query("limit"))
+	offset := (page - 1) * limit
+
+	users, err := postService.Get(offset, limit)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"data": users})
+}
+
+func (p PostController) GetById(ctx *gin.Context) {
+	id := ctx.Param("id")
+	user, err := postService.GetById(id)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"data": user})
+}
+
 func (p PostController) CreatePost(ctx *gin.Context) {
 	var payload types.CreatePost
 	if validationError := ctx.BindJSON(&payload); validationError != nil {
