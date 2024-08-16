@@ -1,34 +1,37 @@
 name: My Deploy
-
-on:
+'on':
     push:
-        branches: [master]
-
+        branches:
+            - master
 jobs:
     build:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
               uses: actions/checkout@v3
-
             - name: Deploy to Render test environment
               id: render_deploy
               uses: johnbeynon/render-deploy-action@v0.0.8
               with:
-                  service-id: ${{ secrets.RENDER_SERVICE_ID }}
-                  api-key: ${{ secrets.RENDER_API_KEY }}
+                  service-id: '${{ secrets.RENDER_SERVICE_ID }}'
+                  api-key: '${{ secrets.RENDER_API_KEY }}'
                   wait-for-success: true
-
             - name: Deployment Logs
               if: steps.render_deploy.outcome == 'success'
               env:
-                  RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
-                  RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-              run: |
+                  RENDER_SERVICE_ID: '${{ secrets.RENDER_SERVICE_ID }}'
+                  RENDER_API_KEY: '${{ secrets.RENDER_API_KEY }}'
+              run: >
                   DEPLOY_ID=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" \
-                  "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" | jq -r '.[0].id')
+
+                  "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" | jq
+                  -r '.[0].id')
+
 
                   # Fetch and display the logs
+
                   logs=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" \
+
                   "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/$DEPLOY_ID/logs")
+
                   echo "$logs"
