@@ -21,6 +21,10 @@ func (a AuthController) Signin(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": serviceError.Error()})
 		return
 	}
+	if response.Token == "" {
+		ctx.JSON(http.StatusNotFound, gin.H{"data": map[string]string{"message": response.Message}})
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{"data": map[string]string{"message": response.Message, "token": response.Token}})
 }
 
