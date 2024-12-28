@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -94,8 +95,9 @@ func (u User) Authenticate(payload types.AuthType) (TokenResponse, error) {
 	isIdentifierEmail := helpers.ValidateEmail(payload.Identifier)
 	if isIdentifierEmail {
 		result := initializers.Repository.Where("email = ?", payload.Identifier).First(&user)
+		fmt.Println(result.Error)
 		if result.Error != nil {
-			return TokenResponse{Message: errorMessage, Token: ""}, result.Error
+			return TokenResponse{Message: errorMessage, Token: ""}, nil
 		}
 		error := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password))
 
