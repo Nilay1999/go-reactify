@@ -1,6 +1,16 @@
 # Use an official Go image for building the application
 FROM golang:1.20 AS builder
 
+ARG DATABASE_URL
+ARG DATABASE_PASS
+ARG PORT
+ARG STAGE
+
+ENV  DATABASE_URL=${DATABASE_URL}
+ENV  DATABASE_PASS=${DATABASE_PASS}
+ENV  PORT=8080
+ENV  STAGE=production
+
 # Set environment variables for Go
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
