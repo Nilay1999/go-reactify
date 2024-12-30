@@ -8,7 +8,9 @@ import (
 )
 
 func init() {
-	initializers.LoadEnvVariables()
+	if os.Getenv("STAGE") != "production" {
+		initializers.LoadEnvVariables()
+	}
 	initializers.Init()
 }
 
