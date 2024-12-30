@@ -1,26 +1,37 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useContext } from 'react';
+import {
+	BrowserRouter as Router,
+	Route,
+	Routes,
+	Navigate,
+	Outlet,
+} from 'react-router-dom';
+import { AuthProvider, AuthContext } from './hooks/AuthContext';
+import Register from './components/auth/Register';
+import LoginPage from './components/auth/LoginForm';
+import { Dashboard } from './components/Dashboard';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const App = () => {
+	const PrivateRoute = () => {
+		const { authenticated } = useContext(AuthContext);
+		if (!authenticated) return <Navigate to="/login" replace />;
+
+		return <Outlet />;
+	};
+
+	return (
+		<AuthProvider>
+			<Router>
+				<Routes>
+					<Route path="/login" element={<LoginPage />} />
+					<Route path="/signup" element={<Register />} />
+					<Route element={<PrivateRoute />}>
+						<Route path="/" element={<Dashboard />} />
+					</Route>
+				</Routes>
+			</Router>
+		</AuthProvider>
+	);
+};
 
 export default App;
