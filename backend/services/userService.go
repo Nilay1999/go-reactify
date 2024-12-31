@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"time"
 
@@ -88,48 +87,36 @@ func (u User) Delete(id string) (string, error) {
 
 func (u User) Authenticate(payload types.AuthType) (TokenResponse, error) {
 	var user User
+	var message = "Authentication successful!"
+	var errorMessage = "User not found with given credentials!"
 
-	var message string = "Authentication successful !"
-	var errorMessage string = "User not found with given credentials !"
-
-	isIdentifierEmail := helpers.ValidateEmail(payload.Identifier)
-	if isIdentifierEmail {
-		result := initializers.Repository.Where("email = ?", payload.Identifier).First(&user)
-		fmt.Println(result.Error)
-		if result.Error != nil {
-			return TokenResponse{Message: errorMessage, Token: ""}, nil
-		}
-		error := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password))
-
-		if error == nil {
-			token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-				"sub": user.ID,
-				"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
-			})
-			tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
-			return TokenResponse{Message: message, Token: tokenString}, err
-		} else {
-			errorMessage = "Incorrect password!"
-			return TokenResponse{Message: errorMessage, Token: ""}, nil
-		}
-
-	} else {
-		result := initializers.Repository.Where("username = ?", payload.Identifier).First(&user)
-		if result.Error != nil {
-			return TokenResponse{Message: errorMessage, Token: ""}, result.Error
-		}
-
-		error := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password))
-		if error == nil {
-			token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-				"sub": user.ID,
-				"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
-			})
-			tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
-			return TokenResponse{Message: message, Token: tokenString}, err
-		} else {
-			errorMessage = "Incorrect password!"
-			return TokenResponse{Message: errorMessage, Token: ""}, nil
-		}
+	// Determine the field to query (email or username)
+	queryField := "username"
+	if helpers.ValidateEmail(payload.Identifier) {
+		queryField = "email"
 	}
+
+	// Find the user in the database
+	result := initializers.Repository.Where(queryField+" = ?", payload.Identifier).First(&user)
+	if result.Error != nil {
+		return TokenResponse{Message: errorMessage, Token: ""}, nil
+	}
+
+	// Compare the password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password)); err != nil {
+		return TokenResponse{Message: "Incorrect password!", Token: ""}, nil
+	}
+
+	// Generate JWT token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": user.ID,
+		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
+	})
+
+	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
+	if err != nil {
+		return TokenResponse{}, err
+	}
+
+	return TokenResponse{Message: message, Token: tokenString}, nil
 }

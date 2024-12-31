@@ -1,5 +1,5 @@
 # Use an official Go image for building the application
-FROM golang:1.20 AS builder
+FROM golang:1.23 AS builder
 
 ARG DATABASE_URL
 ARG DATABASE_PASS

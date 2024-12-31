@@ -22,7 +22,7 @@ func (a AuthController) Signin(ctx *gin.Context) {
 		return
 	}
 	if response.Token == "" {
-		ctx.JSON(http.StatusNotFound, gin.H{"data": map[string]string{"message": response.Message}})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"data": map[string]string{"message": response.Message}})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"data": map[string]string{"message": response.Message, "token": response.Token}})

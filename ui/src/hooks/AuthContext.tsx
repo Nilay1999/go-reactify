@@ -1,5 +1,6 @@
-import React, { createContext, useState, useEffect } from 'react';
-import apiClient from '../api/client';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
+import apiClient, { apis } from '../api/client';
+import { isErrorFromAlias } from '@zodios/core';
 
 type Props = {
 	children?: React.ReactNode;
@@ -13,65 +14,51 @@ export enum AuthStatus {
 
 export interface IAuthContext {
 	authenticated: boolean;
-	login: (email: string, password: string) => void;
+	login: (email: string, password: string) => Promise<void>;
 	logout: () => void;
 }
 
 const initialValue: IAuthContext = {
 	authenticated: false,
-	login: () => {},
+	login: async () => {},
 	logout: () => {},
 };
 
 const AuthContext = createContext<IAuthContext>(initialValue);
 
 export const AuthProvider = ({ children }: Props) => {
-	const [token, setToken] = useState(localStorage.getItem('token') || null);
-	const [authenticated, setAuthenticated] = useState(!!token);
+	const [token, setToken] = useState(() => localStorage.getItem('token'));
+	const [authenticated, setAuthenticated] = useState(() => !!token);
 
-	const login = async (email: string, password: string) => {
+	const login = useCallback(async (email: string, password: string) => {
 		try {
-			console.log('here');
-			const { data } = await apiClient.login({
+			const response = await apiClient.login({
 				identifier: email,
 				password,
 			});
-			const { token } = data;
+			const { token } = response?.data;
 			setToken(token);
 			setAuthenticated(true);
 			localStorage.setItem('token', token);
 		} catch (error) {
-			console.error('Login failed:', error);
-			throw error;
+			if (
+				isErrorFromAlias(apis, 'login', error) &&
+				error.response?.status === 401
+			) {
+				throw error.response.data;
+			}
+			throw new Error('Something went wrong');
 		}
-	};
+	}, []);
 
-	// const register = async (email: string, password: string) => {
-	// 	try {
-	// 		const response = await apiClient.('/api/register', {
-	// 			email,
-	// 			password,
-	// 		});
-	// 		const { token } = response.data;
-	// 		setToken('token');
-	// 		localStorage.setItem('token', 'token');
-	// 		setIsAuthenticated(true);
-	// 	} catch (error) {
-	// 		console.error('Registration failed:', error);
-	// 		throw error;
-	// 	}
-	// };
-
-	const logout = () => {
+	const logout = useCallback(() => {
 		setToken(null);
 		setAuthenticated(false);
 		localStorage.removeItem('token');
-	};
+	}, []);
 
 	useEffect(() => {
-		if (token) {
-			setAuthenticated(true);
-		}
+		setAuthenticated(!!token);
 	}, [token]);
 
 	return (

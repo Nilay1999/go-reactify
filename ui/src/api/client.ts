@@ -22,7 +22,18 @@ export const apis = makeApi([
 				token: z.string(),
 			}),
 		}),
+		errors: [
+			{
+				status: 401,
+				schema: z.object({
+					data: z.object({
+						message: z.string(),
+					}),
+				}),
+			},
+		],
 	},
+
 	{
 		method: 'get',
 		path: 'v1/user',
